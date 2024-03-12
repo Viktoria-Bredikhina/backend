@@ -1,64 +1,58 @@
-const http = require("http");
-const getUsers = require("./modules/users");
-
-const hostname = "127.0.0.1";
-const port = 3003;
-
-// создание сервера происходит при помощи функции createServer
+const http = require('http');
+const { URL } = require('url');
+const getUsers = require('./modules/users');
 const server = http.createServer((request, response) => {
-  const url = new URL(request.url, `http://${hostname}`);
-  const query = url.searchParams;
-  const keys = url.searchParams.keys();
-  // console.log(url);
-  // console.log(url.searchParams);
-  // console.log(keys);
+	const url = new URL(request.url, 'http://127.0.0.1:3003');
+	const helloValue = url.searchParams.get('hello');
+	console.log(helloValue);
+	console.log(request.url);
+	console.log(url);
 
-  if (query.has("hello")) {
-    // если запрос на ?hello=<name>
-    const name = query.get("hello");
 
-    if (name) {
-      response.statusCode = 200;
-      response.header = "Content-Type: text/plain";
-      response.write(`Hello, ${name}!`);
-      response.end();
-      return;
-    }
-    response.statusCode = 400;
-    response.header = "Content-Type: text/plain";
-    response.write("Enter a name");
-    response.end();
-    return;
-  }
-  // если запрос для /users
-  else if (request.url === "/users") {
-    response.statusCode = 200;
-    response.header = "Content-Type: application/json";
-    response.write(getUsers());
-    response.end();
-    return;
+	if (request.url === '/?hello=') {
+		response.statusCode = 400;
+		response.statusMessage = 'Error';
+		response.writeHead(400,{'Content-Type': 'text/plain'})
+		console.log(`Enter a name`);
+		response.write(`Enter a name`);
+		response.end();
+		return;
+	}
+	if (helloValue !== null) {
+		response.statusCode = 200;
+		response.statusMessage = 'OK';
+		response.writeHead(200,{'Content-Type': 'text/plain'})
+		console.log(`Hello value is: ${helloValue}`);
+		response.write(`Hello, ${helloValue}`);
+		response.end();
+		return;
+	}
 
-    // если никакие параметры не переданы
-  } else if (url.search === "") {
-    response.statusCode = 200;
-    response.header = "Content-Type: text/plain";
-    response.write("Hello, world !");
-    response.end();
-  }
-  // если переданы какие-либо другие параметры
-  else {
-    for (const key of keys) {
-      if (key !== "hello") {
-        response.statusCode = 500;
-        response.end();
-        return;
-      }
-      response.end();
-    }
-  }
+	if (request.url === '/users') {
+		response.statusCode = 200;
+		response.statusMessage = 'OK';
+		response.writeHead(200,{'Content-Type': 'application/json'})
+		response.write(getUsers());
+		response.end();
+
+		return;
+	}
+	if (request.url !== '/') {
+		response.statusCode = 500;
+		response.statusMessage = 'Error';
+		response.writeHead(500,{'Content-Type': 'text/plain'})
+		response.write('Error');
+		response.end();
+		return;
+	}
+
+	response.statusCode = 200;
+	response.statusMessage = 'OK';
+	response.writeHead(200,{'Content-Type': 'text/plain'})
+	response.write('hello');
+	response.end();
 });
 
-// запуск сервера выполняется командой .listen
-server.listen(port, hostname, () => {
-  console.log(`Сервер запущен по адресу http://${hostname}:${port}/`);
+server.listen(3003, () => {
+	console.log('Сервер запущен по адресу http://127.0.0.1:3003');
 });
